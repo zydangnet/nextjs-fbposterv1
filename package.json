@@ -1,23 +1,33 @@
 {
-  "name": "mypages13",
+  "name": "mypage13",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "react": "^18",
-    "react-dom": "^18",
-    "next": "13.5.11"
+    "@emoji-mart/data": "^1.1.2",
+    "@emoji-mart/react": "^1.1.1",
+    "@prisma/client": "^5.13.0",
+    "axios": "^1.6.8",
+    "emoji-mart": "^5.5.2",
+    "next": "^14.2.3",
+    "next-auth": "^4.24.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "autoprefixer": "^10",
-    "postcss": "^8",
-    "tailwindcss": "^3",
-    "eslint": "^8",
-    "eslint-config-next": "13.5.11"
+    "@types/node": "22.15.21",
+    "@types/react": "19.1.5",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.3",
+    "postcss": "^8.4.38",
+    "prisma": "^5.13.0",
+    "tailwindcss": "^3.4.3"
   }
 }

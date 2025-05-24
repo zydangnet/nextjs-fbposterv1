@@ -1,0 +1,23 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  // output = "../src/generated/prisma" // XÓA HOẶC COMMENT DÒNG NÀY
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId      String   // ID của người dùng đăng bài (lấy từ session)
+  caption     String?  // Nội dung bài viết
+  imageUrl    String?  // URL của hình ảnh
+  pageIds     String[] // Mảng các ID Fanpage đã đăng
+  status      String   // Trạng thái bài viết (e.g., "pending", "posted", "failed")
+  facebookPostResults Json? // Lưu kết quả trả về từ Facebook API cho từng page
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
