@@ -49,11 +49,16 @@ export default function Home() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setFacebookPages([]);
+      setSelectedPageIds([]);
+      setRecentPosts([]);
       if (session) {
         try {
-          
           const postsRes = await axios.get('/api/get-recent-posts');
           setRecentPosts(postsRes.data.posts);
+
+          // const pagesRes = await axios.get('/api/get-facebook-pages');
+          // setFacebookPages(pagesRes.data.pages);
 
         } catch (err) {
           console.error('Error fetching data:', err.response ? err.response.data : err.message);
