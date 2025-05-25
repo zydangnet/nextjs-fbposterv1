@@ -51,9 +51,7 @@ export default function Home() {
     const fetchData = async () => {
       if (session) {
         try {
-          const pagesRes = await axios.get('/api/get-facebook-pages');
-          setFacebookPages(pagesRes.data.pages);
-
+          
           const postsRes = await axios.get('/api/get-recent-posts');
           setRecentPosts(postsRes.data.posts);
 
