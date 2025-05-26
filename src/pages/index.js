@@ -57,8 +57,8 @@ export default function Home() {
           const postsRes = await axios.get('/api/get-recent-posts');
           setRecentPosts(postsRes.data.posts);
 
-          // const pagesRes = await axios.get('/api/get-facebook-pages');
-          // setFacebookPages(pagesRes.data.pages);
+          const pagesRes = await axios.get('/api/get-facebook-pages');
+          setFacebookPages(pagesRes.data.pages);
 
         } catch (err) {
           console.error('Error fetching data:', err.response ? err.response.data : err.message);
@@ -297,7 +297,7 @@ export default function Home() {
                 id="postContent"
                 value={postContent}
                 onChange={(e) => setPostContent(e.target.value)}
-                rows="15" // THAY ĐỔI TỪ "6" THÀNH "15" Ở ĐÂY
+                rows="15" 
                 placeholder="Nhập nội dung bài viết..."
                 className="mt-0.5 block w-full px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm resize-y"
               ></textarea>
