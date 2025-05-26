@@ -232,7 +232,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto bg-white p-4 rounded-lg shadow-xl">
         <div className="flex justify-between items-center mb-4 border-b pb-2 border-gray-200">
         
-          <h1 className="text-2xl font-extrabold text-gray-900">Quản lý và Đăng bài lên FB-Fanpage của <i>{session.user.name}</i></h1>
+          <h1 className="text-2xl font-extrabold text-gray-900">Đăng bài lên FB-Pages của <i>{session.user.name}</i></h1>
           <button
             onClick={() => signOut()}
             className="px-3 py-1.5 bg-red-500 text-white font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition duration-300"
