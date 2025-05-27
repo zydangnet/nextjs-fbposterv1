@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         results.push({
           pageId,
           status: 'success',
-          data: response.datad.post_id,
+          //data: response.data,
           //endpoint: facebookApiEndpoint,
         });
       } catch (pagePostError) {
