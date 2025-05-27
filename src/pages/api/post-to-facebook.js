@@ -89,8 +89,8 @@ export default async function handler(req, res) {
         results.push({
           pageId,
           status: 'success',
-          data: response.data,
-          endpoint: facebookApiEndpoint,
+          data: response.datad.post_id,
+          //endpoint: facebookApiEndpoint,
         });
       } catch (pagePostError) {
         console.error(`Error posting to Page ID ${pageId}:`, pagePostError.response ? pagePostError.response.data : pagePostError.message);
