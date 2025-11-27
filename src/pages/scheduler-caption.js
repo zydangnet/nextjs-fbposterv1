@@ -3,18 +3,20 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
 import { useSession, signIn, signOut } from "next-auth/react";
-import {FaSpinner, FaComment, FaBold, FaItalic } from 'react-icons/fa';
+import {FaSpinner, FaFileImage, FaListAlt, FaFacebook, FaCalendarAlt,  } from 'react-icons/fa';
 import Header from '../components/Header'; 
-import { toBold, toItalic, toBoldItalic } from '../utils/text-format';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
 
 const API_COMMENT_MANAGER = '/api/comment-manager';
 const API_PAGES_DB = '/api/pages-db';
-
 // Tải Emoji Picker (Client-side only)
 const Picker = dynamic(
   () => import('@emoji-mart/react').then((mod) => mod.default),
   { ssr: false }
 );
+
 // Danh sách icon phổ biến (Đã cập nhật: thu nhỏ và thêm các icon theo yêu cầu)
 const commonIcons = [
   '👉','👍', '👎','👇', '☎️', '🔥', '💥', '✨', '🌟', '⚡', '🎉',
@@ -23,25 +25,13 @@ const commonIcons = [
   '📌', '📍', '💡', '🔔', '📣', '📢', '❓', '❗',
   '🟥', '🟨', '🟩', '🟦', '🟪', '⚪', '🟢','😀', '😂', '😍',
 ];
+// Biến cho 8 URL ảnh
 const initialImageUrlsState = Array(5).fill(''); 
-const VIRAL_BORDER_COLORS = [
-    '#FF0080', // Hồng Neon
-    '#0033FF', // Xanh Hoàng Gia
-    '#FFD700', // Vàng Tươi
-    '#FF6600', // Cam Rực
-    '#00FFCC', // Xanh Ngọc Lam
-    '#6600FF', // Tím Sâu
-];
-const getRandomColor = () => {
-    const randomIndex = Math.floor(Math.random() * VIRAL_BORDER_COLORS.length);
-    return VIRAL_BORDER_COLORS[randomIndex];
-};
 
 export default function Home() {
   const { data: session } = useSession();
 
   const [isClient, setIsClient] = useState(false); 
-  const contentRef = useRef(null);
 
   // STATES CHÍNH
   const [imageUrls, setImageUrls] = useState(initialImageUrlsState); 
@@ -50,21 +40,26 @@ export default function Home() {
   const [selectedPageIds, setSelectedPageIds] = useState([]);
   const [dbComments, setDbComments] = useState([]); // State lưu trữ các mẫu Comment từ DB
   const [selectedCommentId, setSelectedCommentId] = useState(''); // ID của mẫu Comment được chọn
-  const [postCommentTxt, setPostCommentTxt] = useState('');
   const [loadingPublish, setLoadingPublish] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const [contentDrafts, setContentDrafts] = useState([]); 
+  const [selectedDraftId, setSelectedDraftId] = useState(''); 
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
+ 
+  const [postResults, setPostResults] = useState(null); // Lưu kết quả đăng FB
+  const [scheduleDate, setScheduleDate] = useState(null); // Lưu trữ đối tượng Date (hoặc chuỗi ISO)
+  const [isScheduled, setIsScheduled] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
-  const [borderThickness, setBorderThickness] = useState(3); 
-  const [isProcessingImages, setIsProcessingImages] = useState(false);
-  
+  const contentRef = useRef(null);
   
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const fetchPagesAndComments = async () => {
+        
         try{
             try {
             const pagesRes = await axios.get(API_PAGES_DB);
@@ -85,20 +80,22 @@ export default function Home() {
         }catch (err) {
             setError('Failed to load Database: ' + (err.response?.data?.message || err.message));
         } finally {
+            
         }
         
     };
   
   const fetchDrafts = async () => {
-    
+    setLoadingDrafts(true);
     try {
-        const res = await axios.get('/api/content-manager');
+        const res = await axios.get('/api/content-manager?type=SCHEDULER');
         const allDrafts = res.data.contents.sort((a, b) => new Date(b.CreatedDate) - new Date(a.CreatedDate));
         
         setContentDrafts(allDrafts.slice(0, 10)); 
     } catch (err) {
         console.error('Error fetching drafts:', err);
     } finally {
+        setLoadingDrafts(false);
     }
   };
 
@@ -108,86 +105,6 @@ export default function Home() {
         fetchPagesAndComments();
     }
   }, [session]);
-    
-  const handleSelectionChange = (e) => {
-    // e.currentTarget là phần tử textarea
-    // Đọc selectionStart và selectionEnd từ target ngay lập tức
-    setSelectionRange({
-        start: e.currentTarget.selectionStart,
-        end: e.currentTarget.selectionEnd,
-    });
-
-    // Console log để kiểm tra:
-    console.log("Selection captured:", e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
-  };
-  /* const applyFormat = (type) => {
-
-        const start = selectionRange.start;
-        const end = selectionRange.end;
-        const currentText = postContent;
-
-        if (start === end) {
-            alert("Vui lòng chọn một đoạn văn bản để định dạng.");
-            return;
-        }
-
-        const selectedText = currentText.substring(start, end);
-        let formattedText = selectedText;
-
-        // Áp dụng hàm chuyển đổi
-        switch (type) {
-            case 'bold':
-                formattedText = toBold(selectedText);
-                break;
-            case 'italic':
-                formattedText = toItalic(selectedText);
-                break;
-            case 'bold_italic':
-                formattedText = toBoldItalic(selectedText);
-                break;
-            default:
-                return;
-        }
-
-        // Gắn văn bản đã định dạng trở lại
-        const newText = 
-            currentText.substring(0, start) + 
-            formattedText + 
-            currentText.substring(end);
-
-        // Cập nhật state postContent
-        setPostContent(newText); 
-        // Đặt lại focus về textarea để con trỏ hiện đúng vị trí
-        if (contentRef.current) {
-            contentRef.current.focus();
-            contentRef.current.setSelectionRange(start + formattedText.length, start + formattedText.length);
-        }
-    }; */
-
-  const processImageUrlsWithBorder = async (urls, randomColor) => {
-        setIsProcessingImages(true);
-        if(borderThickness < 2)
-        {
-          return urls;
-        }
-        const borderedUrls = [];
-        for (const url of urls) {
-          console.log("## Attempting to add border of image...:", url);
-            try {
-                const response = await axios.post('/api/process-image-border', {
-                    imageUrl: url,
-                    color: randomColor, // <-- SỬ DỤNG MÀU NGẪU NHIÊN
-                    thickness: borderThickness,
-                });
-                borderedUrls.push(response.data.borderedImageUrl);
-            } catch (err) {
-                console.error('Lỗi thêm border ảnh:', err.response ? err.response.data : err.message);
-                borderedUrls.push(url);
-            }
-        }
-        setIsProcessingImages(false);
-        return borderedUrls;
-    };
 
   // --- CÁC HÀM XỬ LÝ KHÁC ---
   const handleImageUrlsChange = (index, value) => {
@@ -224,6 +141,7 @@ export default function Home() {
     event.preventDefault();
     setMessage('');
     setError('');
+    setPostResults(null); // Reset kết quả đăng
     
     const validImageUrls = imageUrls.filter(url => url.trim() !== '');
 
@@ -236,45 +154,60 @@ export default function Home() {
       setError('Vui lòng nhập nội dung bài viết HOẶC cung cấp ít nhất một URL hình ảnh.');
       return; // Dừng lại, không reset form
     }
-    let finalImageUrls = validImageUrls;
-    if (borderThickness > 1 && validImageUrls.length > 0) {
-            if (isProcessingImages) return; 
-            const randomColor = getRandomColor();
-            console.log("Màu viền ngẫu nhiên được chọn:", randomColor);
-            finalImageUrls = await processImageUrlsWithBorder(validImageUrls, randomColor);
-    }
     // Xác định nội dung Comment được chọn
-    let commentContent = '';
-    if(postCommentTxt.trim())
+    const selectedComment = dbComments.find(c => c.id === selectedCommentId);
+    const commentContent = selectedComment ? selectedComment.content : '';
+    const scheduleDateISO = isScheduled && scheduleDate ? scheduleDate.toISOString() : null;
+    if(!scheduleDateISO)
     {
-      commentContent = postCommentTxt.trim();
+      setError('Vui lòng thời gian cần đăng lên lịch.');
+      return;
     }
-    else
-    {
-      const selectedComment = dbComments.find(c => c.id === selectedCommentId);
-      commentContent = selectedComment ? selectedComment.content : '';
-    }
-    
     setLoadingPublish(true);
     setIsPosting(true);
     let shouldResetForm = false; // Biến cờ
     const postData = {
         caption: postContent,
-        imageUrls: finalImageUrls,
+        imageUrls: imageUrls.slice(0, 5),
         selectedPageIds: selectedPageIds,
         commentContent: commentContent,
+        scheduleDate: scheduleDateISO,
       };
     try {
       const response = await axios.post('/api/post-to-facebook-url', postData);
+      const results = response.data.results.filter(r => r.status === 'success');
       
-      //const allSucceeded = response.data.results.every(r => r.status === 'success');
-      const resultsRes = response.data.results.filter(r => r.status === 'success');
-      let fullMessage = `Đã đăng thành công ${resultsRes.length}/${postData.selectedPageIds.length} Fanpage.`;
-      console.log(resultsRes);
-      const totalCommentsToPost = resultsRes.length && resultsRes[0].comments ? resultsRes[0].comments.length * resultsRes.length : 0;
-      fullMessage += ` Và ${totalCommentsToPost} Comments`;
-      setMessage(fullMessage);
-      
+      if (results.length > 0) {
+        let successMessage = `Lịch [${scheduleDate}] đã gửi thành công ${results.length}/${postData.selectedPageIds.length} Fanpages.`;
+        console.log(successMessage);
+        //const hasScheduledPost = results.some(r => r.postMode === 'SCHEDULED'); // return True/False
+        const schedulePosts = results.filter(r => r.postMode === 'SCHEDULED');
+        if (schedulePosts.length > 0) {
+            let schedule_pageIds = []
+            let postId = '';
+             for(const scheduling of schedulePosts)
+             {
+                schedule_pageIds.push(scheduling.pageId);
+                postId = scheduling.postId;
+             }
+             const res = await saveContent2Db(schedule_pageIds, postId, scheduleDate);
+             if(res)
+             {
+              successMessage += ` Và lưu DB scheduler on ${res}`;
+             }
+             
+        }
+        else{
+          successMessage += ' Và ' + results[0].message;
+        }
+        setMessage(successMessage);
+        
+
+      }
+      else {
+        shouldResetForm = false;
+        setError('Có Fanpage đăng bài thất bại. Vui lòng kiểm tra lại');
+      }
     } catch (err) {
       console.error('Lỗi khi gửi request:', err.response ? err.response.data : err.message);
       setError('Lỗi khi đăng bài: ' + (err.response?.data?.message || err.message));
@@ -283,13 +216,41 @@ export default function Home() {
           setImageUrls(initialImageUrlsState);
           setPostContent('');
           setSelectedPageIds([]); 
-          setSelectedDraftId(''); 
       }
       setLoadingPublish(false);
       setIsPosting(false);
     }
   };
 
+  const saveContent2Db = async (pageIds, postId, scheduleDate) => {
+    if(pageIds.length < 1 || !postId || !scheduleDate)
+      return null;
+    const dataToSave = {
+        Name: 'SCHEDULER-'+postContent.substring(0, 30) + '...', // Lấy 50 ký tự đầu làm tên
+        MainContent: postContent.substring(0,100),
+        ImageUrls: imageUrls.filter(url => url.trim() !== ''), // Chỉ lưu các URL hợp lệ
+        Comment: 'SCHEDULER', 
+        IDFbPost: postId, // Post ID
+        PostedDate: scheduleDate,
+        TargetPageIds: pageIds, 
+        PostedIds: null,
+    };
+    try {
+        // Gọi API để tạo Content mới trong MongoDB
+        const saveRes = await axios.post('/api/content-manager', dataToSave); 
+        console.log(saveRes);
+        if(saveRes){
+          return saveRes.data.content.id;
+        }
+    } catch (err) {
+          console.error('Lỗi khi lưu ZyPost:', err.response?.data || err);
+          setError('Lỗi khi lưu ZyPost: ' + (err.response?.data?.message || err.message));
+          setMessage('');
+      } 
+
+    return null;
+  }
+  
   // --- RENDER GIAO DIỆN ---
   if (!isClient) {
     return (
@@ -317,7 +278,7 @@ export default function Home() {
   }
 
   // Component Progress Overlay
-const ProgressOverlay = () => {
+  const ProgressOverlay = () => {
     return (
         // Lớp phủ (Backdrop)
         <div 
@@ -333,7 +294,7 @@ const ProgressOverlay = () => {
             </div>
         </div>
     );
-};
+  };
   const username = session?.user?.name || 'User';
 
   const validImageUrls = imageUrls.filter(url => url.trim() !== '');
@@ -341,13 +302,14 @@ const ProgressOverlay = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header onSignOut={() => signOut()} userName={username} />
+      
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-2 bg-white p-1 rounded-lg shadow-lg h-full"> 
+          <div className="lg:col-span-2 space-y-2 bg-white p-3 rounded-lg shadow-lg flex flex-col max-h-[85vh]"> 
             <form onSubmit={handlePost} className="space-y-3"> 
               <div className='flex flex-col w-full px-3'>
                 <div className="flex w-full justify-between items-center mb-4 pb-2 border-gray-200">
-                    <h1 className="text-xl font-extrabold text-indigo-600">Đăng Caption & Ảnh</h1>
+                    <h1 className="text-xl font-extrabold text-indigo-600">Đăng Bài Hẹn Ngày & Giờ</h1>
                     <button
                         type="submit"
                         disabled={loadingPublish || selectedPageIds.length === 0}
@@ -369,91 +331,51 @@ const ProgressOverlay = () => {
                     }
                 </div>
               </div>
-                {/* Nội dung Bài viết (Caption) */}
-                <div>
-                    <textarea rows="10"
-                      ref={contentRef}
-                      value={postContent}
-                      onChange={(e) => setPostContent(e.target.value)}
-                      // onMouseUp={handleSelectionChange} // Khi nhả chuột
-                      // onSelect={handleSelectionChange}   // <-- THÊM MỚI (chính xác nhất)
-                      // onKeyUp={handleSelectionChange}    // Khi chọn bằng bàn phím
-                      placeholder="Nhập nội dung bài viết..."
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm" 
-                    />
-                    
-                    {/* Emotions thông dụng (Inline) */}
-                    <div className="flex justify-between items-center mt-1">
-                        <div className="flex flex-wrap items-center gap-1"> 
-                            {commonIcons.map((icon, index) => ( // commonIcons.slice(0, 15).map((icon, index)
-                                <span 
-                                    key={index} 
-                                    onClick={() => addEmoji(icon)}
-                                    className=" text-sm cursor-pointer hover:bg-gray-200 rounded transition" // text-lg cho kích thước nhỏ hơn
-                                    title={`Thêm ${icon}`}
-                                >
-                                    {icon}
-                                </span>
-                            ))}
-                        </div>
-                        <span className="text-xs text-gray-500">{postContent.length} ký tự</span>
-                    </div>
-                </div>
-                <div className="flex space-x-2 mb-2">
-                  
-                </div>
-                {/* URL Hình ảnh (Tối đa 8) */}
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-2'> 
-                    <p className="text-xs text-gray-500 mt-1">Dán URL ảnh công khai, các URL rỗng sẽ bị bỏ qua khi đăng bài.</p>
-                    {initialImageUrlsState.map((_, index) => (
-                        <input
-                            key={index}
-                            type="url"
-                            value={imageUrls[index] || ''}
-                            onChange={(e) => handleImageUrlsChange(index, e.target.value)}
-                            placeholder={`URL ảnh ${index + 1}`}
-                            className="mt-1 w-full border border-gray-300 rounded-md shadow-sm px-2 py-1 text-xs" 
-                        />
-                    ))}
-                </div>
-                <div className="mb-4 bg-amber-100 rounded-md px-2 py-2">
-                <label htmlFor="commentTemplate" className="block text-sm font-medium text-gray-700 flex items-center">
-                    <FaComment className="mr-1 text-gray-500" /> Đăng kèm Comment
-                </label>
-                <textarea
-                      rows="5"
-                      value={postCommentTxt}
-                      onChange={(e) => setPostCommentTxt(e.target.value)}
-                      placeholder="Nhập comment đăng kèm thì không cần chọn Comment từ danh sách..."
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm" 
-                />
-                {dbComments.length > 0 ? (
-                    <select
-                        id="commentTemplate"
-                        value={selectedCommentId}
-                        onChange={(e) => setSelectedCommentId(e.target.value)}
-                        className="my-1 py-1 block w-full rounded-md border border-gray-200 shadow-sm focus:border-indigo-700 focus:ring-indigo-500 sm:text-sm"
-                    >
-                        <option value="">-- Không sử dụng Comment, lấy trong textbox --</option>
-                        {dbComments.map(comment => (
-                            <option key={comment.id} value={comment.id}>
-                                {comment.name} ({comment.content.substring(0, 30)}...)
-                            </option>
-                        ))}
-                    </select>
-                ) : (
-                    <p className="text-xs text-gray-500 italic">
-                        {session ? 'Đang tải Danh sách Comment...' : 'Vui lòng đăng nhập để tải Comment.'}
-                    </p>
-                )}
+              <div>
+                  <textarea
+                    ref={contentRef}
+                    rows="10"
+                    value={postContent}
+                    onChange={(e) => setPostContent(e.target.value)}
+                    placeholder="Nhập nội dung bài viết..."
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm" 
+                  />
+                  <div className="flex justify-between items-center mt-1">
+                      <div className="flex flex-wrap items-center gap-1"> 
+                          {commonIcons.map((icon, index) => ( 
+                              <span 
+                                  key={index} 
+                                  onClick={() => addEmoji(icon)}
+                                  className=" text-sm cursor-pointer hover:bg-gray-200 rounded transition" // text-lg cho kích thước nhỏ hơn
+                                  title={`Thêm ${icon}`}
+                              >
+                                  {icon}
+                              </span>
+                          ))}
+                      </div>
+                      <span className="text-xs text-gray-500">{postContent.length} ký tự</span>
+                  </div>
               </div>
+              <div > 
+                  <p className="text-xs text-gray-500 mt-1">Dán URL ảnh công khai. Các URL rỗng sẽ bị bỏ qua khi đăng bài.</p>
+                  {initialImageUrlsState.map((_, index) => (
+                      <input
+                          key={index}
+                          type="url"
+                          value={imageUrls[index] || ''}
+                          onChange={(e) => handleImageUrlsChange(index, e.target.value)}
+                          placeholder={`URL ảnh ${index + 1}`}
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-2 py-1 text-xs" 
+                      />
+                  ))}
+              </div>
+                
             </form>
             
           </div>
-          <div className="lg:col-span-1 space-y-2 bg-white p-3 rounded-lg shadow-lg flex flex-col max-h-[85vh]"> 
+          <div className="lg:col-span-1 space-y-2 bg-white p-3 rounded-lg shadow-lg flex flex-col max-h-[85vh]">
             <div className="flex-none pb-2 mb-2 border-b border-gray-200">
                 <p className="text-xs text-red-500 mb-2 font-semibold">Chọn ít nhất 1 Fanpage đăng bài</p> 
-                
                 {/* Chiều cao cố định và overflow-y-auto nếu cần thiết */}
                 <div className="max-h-90 overflow-y-auto">
                     {facebookPages.length > 0 ? (
@@ -480,22 +402,51 @@ const ProgressOverlay = () => {
                     )}
                 </div>
             </div>
-            <div className="w-full"> {/* Thay đổi class để chiếm trọn chiều rộng */}
-                <label className="block text-xs font-medium text-gray-700 mb-1">Độ Dày viền ảnh (px)</label>
+            <div className="mb-4 bg-amber-300 px-2 py-2">
+            <label className="flex items-center space-x-2 cursor-pointer mb-2">
                 <input
-                    type="number"
-                    value={borderThickness}
-                    onChange={(e) => setBorderThickness(parseInt(e.target.value))}
-                    min="1"
-                    max="50"
-                    className="w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    type="checkbox"
+                    checked={isScheduled}
+                    onChange={(e) => {
+                        setIsScheduled(e.target.checked);
+                        // Reset lịch hẹn nếu bỏ chọn
+                        if (!e.target.checked) {
+                            setScheduleDate(null);
+                        }
+                    }}
+                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-            </div>
+                <span className="text-sm font-medium text-gray-700 flex items-center">
+                    <FaCalendarAlt className="mr-1 text-indigo-600" /> Lên lịch đăng bài (Scheduled Post)
+                </span>
+            </label>
+
+            {/* Hiển thị DatePicker nếu 'isScheduled' được chọn */}
+            {isScheduled && (
+                <div className="mt-2">
+                    <DatePicker
+                        selected={scheduleDate}
+                        onChange={(date) => setScheduleDate(date)}
+                        showTimeSelect
+                        dateFormat="dd/MM/yyyy HH:mm" // Định dạng hiển thị
+                        minDate={new Date()} // Không cho phép chọn ngày đã qua
+                        placeholderText="Chọn Ngày và Giờ đăng bài"
+                        className="w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    {scheduleDate && (
+                        <p className="text-xs text-indigo-600 italic mt-1">
+                            Bài viết sẽ đăng vào: **{scheduleDate.toLocaleString('vi-VN')}**
+                        </p>
+                    )}
+                </div>
+            )}
+        </div>
+
             {/* PHẦN DƯỚI: IMAGE PREVIEW (Chiếm hết không gian còn lại) */}
             <div className="flex-grow pt-2 overflow-y-auto">
                 <h2 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">Preview Hình ảnh ({validImageUrls.length})</h2>
                 {validImageUrls.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-3 gap-1.5">
                         {validImageUrls.map((url, index) => (
                             <div key={index} className="w-full h-20 overflow-hidden rounded-md border border-gray-300 flex items-center justify-center bg-gray-100">
                                 <img 
@@ -517,7 +468,47 @@ const ProgressOverlay = () => {
                     <p className="text-xs text-gray-500 italic text-center py-4">Chưa có URL ảnh nào để xem trước.</p>
                 )}
             </div>
+          
           </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-2">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                <FaListAlt className="mr-2 text-indigo-600" /> Danh Sách Schedulers
+            </h2>
+          </div>
+            {contentDrafts && contentDrafts.length > 0 ? (
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {contentDrafts.map(content => {
+                        const imageCount = content.ImageUrls?.filter(url => url.trim()).length || 0;
+                        const postId = content.IDFbPost || 'N/A';
+                        
+                        return (
+                            // <li className="p-2 rounded-md border cursor-pointer transition bg-gray-50 border-gray-200 hover:bg-gray-100">
+                            <li key={content.id} className="p-2 border border-gray-200 rounded-lg shadow-sm bg-white hover:bg-gray-50 transition duration-150">
+                              <div className="pr-4 overflow-hidden justify-betwee">
+                                <div className="text-sm font-semibold text-gray-900 line-clamp-1">{content.Name}</div>
+                                <p className="text-xs text-gray-600 line-clamp-2 mt-0.5">{content.MainContent.substring(0,100)}</p>
+                                <div className="text-xs mt-1 justify-between  pt-1 border-t border-gray-200 text-gray-500">
+                                  <span className="mt-1">Sent date: {content.PostedDate} || </span>
+                                  <span className="mt-1">
+                                    <FaFacebook className="inline mr-1 text-blue-500"/> ID: <span className="text-xs font-mono">{content.IDFbPost ? content.IDFbPost.substring(0, 25):''} ||</span>
+                                  </span>
+                                  <span className="mt-1">
+                                    <FaFileImage className="inline mr-1 text-purple-500"/> {imageCount} ảnh
+                                  </span>
+                                </div>
+                                <div className="text-xs mt-1 justify-between  pt-1 border-t border-gray-200 text-gray-500">
+                                  <span className="mt-1">Pages: {content.TargetPageIds.join('; ')} </span>
+                                </div>
+                              </div>
+                            </li>
+                        );
+                    })}
+                </ul>
+            ) : (
+                <p className="text-xs text-gray-500 italic text-center py-3">Không có bản scheduler nào.</p>
+            )}
           
         </div>
       </main>

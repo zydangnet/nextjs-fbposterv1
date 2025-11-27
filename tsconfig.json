@@ -18,7 +18,8 @@
     "jsx": "preserve",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "baseUrl": "src" // Hoặc "." nếu bạn đặt pages/ và utils/ ngang hàng
   },
   "include": [
     "next-env.d.ts",

@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     // Lấy danh sách các Fanpage mà người dùng quản lý
     const response = await axios.get(
-      `https://graph.facebook.com/v19.0/me/accounts`, // Sử dụng v19.0 hoặc phiên bản mới nhất
+      `https://graph.facebook.com/v24.0/me/accounts`, // Sử dụng v19.0 hoặc phiên bản mới nhất
       {
         params: {
           access_token: token.accessToken,

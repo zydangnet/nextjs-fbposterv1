@@ -1,23 +1,60 @@
-// prisma/schema.prisma
+// File: prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
-  // output = "../src/generated/prisma" // XÓA HOẶC COMMENT DÒNG NÀY
 }
 
+// Cấu hình Database MongoDB
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id          String   @id @map("_id") @default(auto()) @db.ObjectId
-  userId      String   // ID của người dùng đăng bài (lấy từ session)
-  caption     String?  // Nội dung bài viết
-  imageUrl    String?  // URL của hình ảnh
-  pageIds     String[] // Mảng các ID Fanpage đã đăng
-  status      String   // Trạng thái bài viết (e.g., "pending", "posted", "failed")
-  facebookPostResults Json? // Lưu kết quả trả về từ Facebook API cho từng page
+// Định nghĩa mô hình Nội dung (Content Model)
+// Tên Collection là "newpostfb"
+model Content {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String
+  Name        String
+  MainContent String
+  VideoPath   String?   // Dùng String? để cho phép null
+  ImageUrls   String[]  // Dùng String[] cho mảng URL ảnh
+  LinkAffi    String?
+  Comment     String?
+  IDFbPost    String?   // ID Facebook Post (Post ID) latest
+  PostedDate  DateTime? // Ngày đăng lên Facebook
+  ScheduleDate DateTime? // Thời gian/Ngày giờ lên lịch cụ thể
+  TargetPageIds String[]  // Mảng Page ID sẽ đăng lên (vì 1 nội dung có thể đăng trên nhiều page)
+  PostedIds   String[] // List of ID
+  CreatedDate DateTime  @default(now())
+
+  // Map model này tới collection 'newpostfb'
+  @@map("newpostfb")
+  @@index([userId])
+}
+
+
+model FacebookPage {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String
+  userName    String
+  pageId      String   @unique // ID của Fanpage trên Facebook
+  name        String
+  accessToken String   // Page Access Token (Quan trọng cho việc đăng bài)
+  category    String?
+  pictureUrl  String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@map("facebook_pages") 
+}
+
+model FacebookComment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId //@id @default(cuid()) // ID tự động
+  name        String   // Tên mẫu comment (dùng để dễ quản lý)
+  content     String  
+  CreatedDate DateTime @default(now())
+  UpdatedDate DateTime? 
+
+  @@map("fbcomment") 
 }
