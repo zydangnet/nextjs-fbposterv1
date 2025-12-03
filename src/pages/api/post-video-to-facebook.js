@@ -86,9 +86,6 @@ const postVideoToPage = async (pageId, pageAccessToken, postData) => {
     
     // Nếu là REELS, thêm tham số:
     if (videoType === 'REELS') {
-        // Facebook khuyên dùng endpoint /feed cho Reels từ API v16.0+, nhưng thường video/reels endpoint vẫn được dùng.
-        // Tuy nhiên, việc đăng Reels thường có các yêu cầu đặc biệt về chiều dọc, thời lượng.
-        // Để đơn giản, ta chỉ thêm tham số is_reel=true (hoặc published_as_reel=true, tùy phiên bản)
         formData.append('is_reel', 'true');
         // Đối với API mới hơn, có thể dùng published_as_reel=true
         // formData.append('published_as_reel', 'true'); 
