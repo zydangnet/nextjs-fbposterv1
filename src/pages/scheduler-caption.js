@@ -227,7 +227,7 @@ export default function Home() {
       return null;
     const dataToSave = {
         Name: 'SCHEDULER-'+postContent.substring(0, 30) + '...', // Lấy 50 ký tự đầu làm tên
-        MainContent: postContent.substring(0,100),
+        MainContent: postContent,
         ImageUrls: imageUrls.filter(url => url.trim() !== ''), // Chỉ lưu các URL hợp lệ
         Comment: 'SCHEDULER', 
         IDFbPost: postId, // Post ID
@@ -417,7 +417,7 @@ export default function Home() {
                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm font-medium text-gray-700 flex items-center">
-                    <FaCalendarAlt className="mr-1 text-indigo-600" /> Lên lịch đăng bài (Scheduled Post)
+                    <FaCalendarAlt className="mr-1 text-indigo-600" /> Lên lịch đăng (Facebook Business)
                 </span>
             </label>
 

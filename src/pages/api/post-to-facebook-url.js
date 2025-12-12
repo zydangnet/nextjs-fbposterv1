@@ -4,7 +4,7 @@ import axios from "axios";
 import { splitAndCleanString, shuffleArray } from 'utils/functions';
 
 const secret = process.env.NEXTAUTH_SECRET;
-const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
+//const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 const API_VERSION = 'v24.0';
 
 // === THÊM MỚI: Hàm đăng bình luận ===
@@ -27,7 +27,7 @@ const postToPage = async (pageId, pageAccessToken, postData) => {
     const scheduledParams = {};
     let postMode = "LIVE"; // Mặc định là đăng ngay
     let pageMessage = '';
-    if (scheduleDate) {
+    /* if (scheduleDate) {
         try {
             const scheduleTime = new Date(scheduleDate);
             const now = new Date();
@@ -51,7 +51,7 @@ const postToPage = async (pageId, pageAccessToken, postData) => {
             pageMessage = `[SCHEDULER] Invalid schedule date format. Posting immediately: ${e.message}`;
             console.error('[SCHEDULER] Invalid schedule date format. Posting immediately:', e.message);
         }
-    }
+    } */
     const sources = (imageUrls || []).filter(url => url.trim() !== '');
     if (sources.length === 0) {
         // TRƯỜNG HỢP 0 ẢNH HOẶC CHỈ CÓ TEXT

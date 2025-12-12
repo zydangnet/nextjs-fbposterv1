@@ -1,5 +1,6 @@
 import { getToken } from "next-auth/jwt";
 import axios from "axios";
+import { splitAndCleanString, shuffleArray } from 'utils/functions';
 
 const secret = process.env.NEXTAUTH_SECRET;
 const API_VERSION = 'v24.0'; 
@@ -85,24 +86,31 @@ export default async function handler(req, res) {
     }
 
     // Bước 2: Gọi API để thêm bình luận
-    // Endpoint: /{post-id}/comments
+    let commentsToPost = commentContent ? splitAndCleanString(commentContent) : [];
+    if(commentsToPost.length > 3)
+      commentsToPost = shuffleArray(commentsToPost);
+  
     const endpoint = `https://graph.facebook.com/${API_VERSION}/${finalPostId}/comments`;
-    
-    const params = {
-        message: commentContent.trim(),
+    const commentIdLs = [];
+    for (const commentMessage of commentsToPost) {
+      const params = {
+        message: commentMessage.trim(),
         access_token: pageAccessToken,
-    };
-    
-    console.log(`Attempting to add comment to Post ID: ${finalPostId} on Page ID: ${pageId}`);
+      };
+      
+      console.log(`Attempting to add comment to Post-ID: ${finalPostId}`);
 
-    const response = await axios.post(endpoint, null, { params });
-    
-    // Facebook trả về ID của comment mới được tạo
+      const response = await axios.post(endpoint, null, { params });
+      if(response.data && response.data.id){
+        commentIdLs.push(response.data.id);
+      }
+    }
     return res.status(200).json({
-      message: 'Comment added successfully.',
-      commentId: response.data.id,
-      postResponse: response.data,
-    });
+        message: 'Comment added successfully.',
+        commentIds: commentIdLs,
+      });
+    
+    
 
   } catch (apiError) {
     console.error('Error adding comment:', apiError.response ? apiError.response.data : apiError.message);

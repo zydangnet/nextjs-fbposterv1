@@ -272,7 +272,7 @@ export default function VideoUpload() {
                       className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                   />
                   <span className="text-sm font-medium text-gray-700 flex items-center">
-                      <FaCalendarAlt className="mr-1 text-indigo-600" /> Lên lịch đăng bài
+                      <FaCalendarAlt className="mr-1 text-indigo-600" /> Lên lịch đăng (Facebook Business)
                   </span>
               </label>
                 {isScheduled && (

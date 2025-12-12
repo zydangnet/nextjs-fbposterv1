@@ -694,7 +694,7 @@ export default function ZyPostFbManager() { // ĐÃ ĐỔI TÊN COMPONENT
                                     {/* Lịch đăng */}
                                     <div className="space-y-2 border p-3 rounded-md bg-gray-50">
                                         <label htmlFor="ScheduleDate" className="block text-sm font-bold text-gray-700 flex items-center">
-                                            <FaClock className="mr-1 text-purple-600"/> Lịch đăng (Schedule)
+                                            <FaClock className="mr-1 text-purple-600"/> Lịch đăng như CronJob
                                         </label>
                                         <input
                                             type="datetime-local"

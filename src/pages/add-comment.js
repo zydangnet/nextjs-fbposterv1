@@ -96,10 +96,10 @@ export default function AddComment() {
             commentContent: trimmedComment,
         });
         
-        setMessage(`Đã thêm bình luận thành công! Comment ID: ${response.data.commentId}`);
+        setMessage(`Đã thêm bình luận thành công! Comment ID: ${response.data.commentIds.join("; ")}`);
         setError('');
         // Sau khi comment thành công, làm mới danh sách bài viết
-        fetchLatestPosts(selectedPageId); 
+        //fetchLatestPosts(selectedPageId); 
         
     } catch (err) {
       console.error('Lỗi khi gửi request thêm Comment:', err.response ? err.response.data : err.message);
