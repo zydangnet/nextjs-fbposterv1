@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     const params = {
         // Lấy các trường thông tin quan trọng
         fields: 'id,message,created_time,full_picture,permalink_url,shares,comments.summary(true),reactions.summary(true)',
-        limit: 6, // Giới hạn 6 bài
+        limit: 10, // Giới hạn 6 bài
         access_token: pageAccessToken, // Cần Page Access Token
     };
     
